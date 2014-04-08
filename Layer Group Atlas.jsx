@@ -169,14 +169,6 @@ function buildAtlas( metadata ){
         done = false,
         atlas; 
         
-    // remove "_" layers from our local list
-    for( var i = layers.length - 1; i >= 0; i-- ){
-        var layer = layers[i];
-        if( layer.name[0] === "_" ){
-            layers.splice(i, 1);
-        }
-    }
-    
     // sort layers from biggest to smallest to optimize atlas creation
     layers.sort(layerCompare);
     layers.reverse();
