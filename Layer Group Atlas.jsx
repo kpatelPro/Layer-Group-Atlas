@@ -382,6 +382,9 @@ function starlingXml( metadata, indent ){
     // output SubTexture nodes
 	for( var i = 0; i < metadata.layers.length; i++ ){
         var layer = metadata.layers[i];
+        if( layer.name[0] === "_" ){
+            continue;
+        }
         s += '    ';
         s += '<SubTexture ';
         s += 'name="' + layer.name + '" ';
