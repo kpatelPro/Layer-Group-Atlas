@@ -57,10 +57,11 @@ app.bringToFront();
 
 // debug level: 0-2 (0:disable, 1:break on error, 2:break at beginning)
 $.level = 1;
-// debugger; // launch debugger on next line
+debugger; // launch debugger on next line
 
-var atlasSuffix = "_atlas";
-var metadataSuffix = "_metadata";
+var renderBackgroundLayer = null;
+var atlasSuffix = "";
+var metadataSuffix = "";
 
 /*
     the amount of empty space we'll put around each object in the atlas to ensure
@@ -90,7 +91,6 @@ function pad(i){
 	}
 }
 
-var renderBackgroundLayer;
 if( app.documents.length == 0 ){
 	alert( "No document to process!" );
 } else {
@@ -475,7 +475,7 @@ function processLayers(){
 	renderAtlas( docRef, metadata );
 	
 	if( metadata.layers.length > 0 ){
-		saveFile( outputFolder + "/" + getMetadataName(metadata) + ".json", json( metadata ) );
+		//saveFile( outputFolder + "/" + getMetadataName(metadata) + ".json", json( metadata ) );
 		saveFile( outputFolder + "/" + getMetadataName(metadata) + ".xml", starlingXml( metadata ) );
 	}
 	
