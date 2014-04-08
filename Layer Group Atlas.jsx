@@ -14,7 +14,10 @@
 	    element-state) with a sensible naming convention (your choice).
 	2)  Press a button in Photoshop.
 	3)  You now have all the pieces in a single image ("image atlas"),
-	4)  along with JSON containing metadata (the layer group names -> original image position
+	4)  along with:
+        - JSON containing metadata (the layer group names -> original image position
+	    and dimensions, and the dimensions of the source layout), and
+	    - Starling XML containing metadata (the layer group names -> original image position
 	    and dimensions, and the dimensions of the source layout), and
     TODO:
 	5)  CSS that provides a class for using each image as a sprite.
@@ -55,6 +58,9 @@ app.bringToFront();
 // debug level: 0-2 (0:disable, 1:break on error, 2:break at beginning)
 $.level = 1;
 // debugger; // launch debugger on next line
+
+var atlasSuffix = "_atlas";
+var metadataSuffix = "_metadata";
 
 /*
     the amount of empty space we'll put around each object in the atlas to ensure
@@ -245,6 +251,14 @@ function buildAtlas( metadata ){
     metadata.atlas = { width: w, height: h };
 }
 
+function getAtlasName(metadata) {
+    return metadata.name + atlasSuffix;
+}
+
+function getMetadataName(metadata) {
+    return metadata.name + metadataSuffix;
+}
+
 function renderAtlas( docRef, metadata ){
     var i,
         layers = metadata.layers,
@@ -253,7 +267,7 @@ function renderAtlas( docRef, metadata ){
             metadata.atlas.width, 
             metadata.atlas.height, 
             72, 
-            metadata.name + "_atlas", 
+            getAtlasName(metadata), 
             NewDocumentMode.RGB, 
             DocumentFill.TRANSPARENT, 
             1
@@ -292,7 +306,7 @@ function renderAtlas( docRef, metadata ){
     }
     
     atlasDoc.mergeVisibleLayers();
-    atlasDoc.saveAs( new File( outputFolder + "/" + metadata.name + "_atlas.png" ), pngOptions );
+    atlasDoc.saveAs( new File( outputFolder + "/" + getAtlasName(metadata) + ".png" ), pngOptions );
     // atlasDoc.close( SaveOptions.DONOTSAVECHANGES );
 }
 
@@ -380,6 +394,41 @@ function json( o, indent ){
     return s;
 }
 
+// Quick and dirty starling xml export
+function starlingXml( metadata, indent ){
+    var s = '',
+        i,
+        parts = [];
+    
+    // open TextureAtlas node
+    s += '<TextureAtlas ';
+    s += 'imagePath="' + getAtlasName(metadata) + '.png">';
+    s += '\n';
+    
+    // output SubTexture nodes
+	for( var i = 0; i < metadata.layers.length; i++ ){
+        var layer = metadata.layers[i];
+        s += '    ';
+        s += '<SubTexture ';
+        s += 'name="' + layer.name + '" ';
+        s += 'x="' + layer.packedOrigin.x + '" ';
+        s += 'y="' + layer.packedOrigin.y + '" ';
+        s += 'width="' + layer.width + '" ';
+        s += 'height="' + layer.height + '" ';
+        s += 'pivotX="' + -layer.left + '" ';
+        s += 'pivotY="' + -layer.top + '" ';
+        s += 'layer="' + layer.layer_index + '" ';
+        s += '/>';
+        s += '\n';
+    }
+    
+    // close TextureAtlas node
+    s += '</TextureAtlas>';
+    s += '\n';
+    
+    return s;
+}
+
 function saveFile( path, content ){
     var fileObj = new File( path );
     if( fileObj.open( 'w' ) ){
@@ -426,7 +475,8 @@ function processLayers(){
 	renderAtlas( docRef, metadata );
 	
 	if( metadata.layers.length > 0 ){
-		saveFile( outputFolder + "/" + metadata.name + "_metadata.json", json( metadata ) );
+		saveFile( outputFolder + "/" + getMetadataName(metadata) + ".json", json( metadata ) );
+		saveFile( outputFolder + "/" + getMetadataName(metadata) + ".xml", starlingXml( metadata ) );
 	}
 	
 	app.activeDocument = docRef;
