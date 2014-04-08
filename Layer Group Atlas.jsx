@@ -153,13 +153,34 @@ function layerMetadata( doc, layer_idx ){
     return layer_data;
 }
 
+function layerCompare(a,b) {
+  if (a.width < b.width)
+     return -1;
+  if (a.width > b.width)
+    return 1;
+  return 0;
+}
+
 function buildAtlas( metadata ){
-    var layers = metadata.layers,
+    var layers = metadata.layers.slice(0),
         w = 0,
         h = 0,
         used,
         done = false,
         atlas; 
+        
+    // remove "_" layers from our local list
+    for( var i = layers.length - 1; i >= 0; i-- ){
+        var layer = layers[i];
+        if( layer.name[0] === "_" ){
+            layers.splice(i, 1);
+        }
+    }
+    
+    // sort layers from biggest to smallest to optimize atlas creation
+    layers.sort(layerCompare);
+    layers.reverse();
+        
     /*
         we start with the smallest 2^m x 2^n rect that will contain the any
         individual layer, and try to fit our atlas in.
