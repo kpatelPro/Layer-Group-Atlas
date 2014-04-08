@@ -84,11 +84,13 @@ function pad(i){
 	}
 }
 
+var renderBackgroundLayer;
 if( app.documents.length == 0 ){
 	alert( "No document to process!" );
 } else {
 	var outputFolder = Folder.selectDialog("Select a folder for the output files");
 	if( outputFolder != null ){
+        renderBackgroundLayer = confirm('Include the Background layer?', false, 'Include Background Layer?');
 		processLayers();
 	}
 }
@@ -123,7 +125,8 @@ function layerMetadata( doc, layer_idx ){
             height: coord(layer.bounds[3]) - coord(layer.bounds[1]),
             pinX: 0.5, // center by default
             pinY: 0.5, // center by default
-            layer_index: layer_idx
+            layer_index: layer_idx,
+            isBackgroundLayer: layer.isBackgroundLayer
         };
     if( name_parts.length > 1 ){
         name_parts.shift();
@@ -161,6 +164,16 @@ function layerCompare(a,b) {
   return 0;
 }
 
+function shouldRenderLayerToAtlas( layer ){
+    if( layer.name[0] === "_" ){
+        return false;
+    }
+    if( layer.isBackgroundLayer == true ){
+        return renderBackgroundLayer;
+    }
+    return true;
+}
+
 function buildAtlas( metadata ){
     var layers = metadata.layers.slice(0),
         w = 0,
@@ -169,14 +182,6 @@ function buildAtlas( metadata ){
         done = false,
         atlas; 
         
-    // remove "_" layers from our local list
-    for( var i = layers.length - 1; i >= 0; i-- ){
-        var layer = layers[i];
-        if( layer.name[0] === "_" ){
-            layers.splice(i, 1);
-        }
-    }
-    
     // sort layers from biggest to smallest to optimize atlas creation
     layers.sort(layerCompare);
     layers.reverse();
@@ -191,7 +196,7 @@ function buildAtlas( metadata ){
     // find minimum w and h such that every individual layer will fit
     for( var i = 0; i < layers.length; i++ ){
         var layer = layers[i];
-        if( layer.name[0] === "_" ){
+        if( !shouldRenderLayerToAtlas(layer) ){
             continue;
         }
         if( layer.width + 2 > w ){
@@ -214,7 +219,7 @@ function buildAtlas( metadata ){
             var layer = layers[i];
             
             // do not render underscored files
-            if( layer.name[0] === "_" ){
+            if( !shouldRenderLayerToAtlas(layer) ){
                 continue;
             }
             var packedOrigin = atlas.findCoords( layers[i].width + 2, layers[i].height + 2 );
@@ -259,7 +264,7 @@ function renderAtlas( docRef, metadata ){
             source = docRef.layers[layer.layer_index];
         
         // do not render underscored files
-        if( layer.name[0] === "_" ){
+        if( !shouldRenderLayerToAtlas(layer) ){
             continue;
         }
         app.activeDocument = docRef;    
