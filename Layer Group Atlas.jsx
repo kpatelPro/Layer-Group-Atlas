@@ -173,15 +173,15 @@ function buildAtlas( metadata ){
         if( layer.name[0] === "_" ){
             continue;
         }
-        if( layer.width + 2 > w ){
+        if( layer.width + safetyMargin * 2 > w ){
             w = layer.width + safetyMargin * 2;
         }
-        if( layer.height + 2 > h ){
+        if( layer.height + safetyMargin * 2 > h ){
             h = layer.height + safetyMargin * 2;
         }
     }
-    w = Math.pow( 2, Math.floor( Math.log(w) / Math.log(2) + 1 ) );
-    h = Math.pow( 2, Math.floor( Math.log(h) / Math.log(2) + 1 ) );
+    w = Math.pow( 2, Math.ceil( Math.log(w) / Math.log(2) ) );
+    h = Math.pow( 2, Math.ceil( Math.log(h) / Math.log(2) ) );
     
     // create our initial atlas
     atlas = new NETXUS.RectanglePacker( w, h );
@@ -196,10 +196,10 @@ function buildAtlas( metadata ){
             if( layer.name[0] === "_" ){
                 continue;
             }
-            var packedOrigin = atlas.findCoords( layers[i].width + 2, layers[i].height + 2 );
+            var packedOrigin = atlas.findCoords( layers[i].width + safetyMargin * 2, layers[i].height + safetyMargin * 2);
             if( packedOrigin !== null ){
-                packedOrigin.x += 1;
-                packedOrigin.y += 1;
+                packedOrigin.x += safetyMargin;
+                packedOrigin.y += safetyMargin;
                 layer.packedOrigin = packedOrigin;
             } else {
                 if( w < h ){
