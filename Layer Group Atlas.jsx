@@ -57,7 +57,7 @@ app.bringToFront();
 
 // debug level: 0-2 (0:disable, 1:break on error, 2:break at beginning)
 $.level = 1;
-debugger; // launch debugger on next line
+// debugger; // launch debugger on next line
 
 var renderBackgroundLayer = null;
 var atlasSuffix = "";
@@ -408,7 +408,7 @@ function starlingXml( metadata, indent ){
     // output SubTexture nodes
 	for( var i = 0; i < metadata.layers.length; i++ ){
         var layer = metadata.layers[i];
-        if( layer.name[0] === "_" ){
+        if( !shouldRenderLayerToAtlas(layer) ){
             continue;
         }
         s += '    ';
