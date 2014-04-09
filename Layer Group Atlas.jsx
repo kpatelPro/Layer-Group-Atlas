@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Layer Group to Image Atlas
 	Tonio Loewald (c)2013
 	Derived from earlier work written in 2011-2012
@@ -59,7 +59,7 @@ app.bringToFront();
 $.level = 1;
 // debugger; // launch debugger on next line
 
-var renderBackgroundLayer = null;
+var renderBackgroundLayer = false;
 var atlasSuffix = "";
 var metadataSuffix = "";
 
@@ -69,6 +69,82 @@ var metadataSuffix = "";
     a safetyMargin of 1 should be fine
 */
 var safetyMargin = 1;
+
+
+/* options dialog */
+var optionsDialogResource = "dialog {  \
+    orientation: 'column', \
+    alignChildren: ['fill', 'top'],  \
+    preferredSize:[300, 130], \
+    text: 'Texture Atlas Options',  \
+    margins:15, \
+    \
+    outputFolder: Group{ \
+        orientation: 'row', \
+        label: StaticText {text: 'Output: '}, \
+        input: EditText { text: '', characters: 30, justify: 'left'}, \
+        browseButton: Button { text: 'Browse', properties:{name:'browse'}, size: [120,24], alignment:['right', 'center'] } \
+    }, \
+    suffix: Group{ \
+        orientation: 'row', \
+        atlas: Group{ \
+            orientation: 'row', \
+            label: StaticText {text: 'Atlas Suffix:'}, \
+            input: EditText { text: '', characters: 10, justify: 'left'} \
+        }, \
+        metadata: Group{ \
+            orientation: 'row', \
+            label: StaticText {text: 'MetaData Suffix:'}, \
+            input: EditText { text: '', characters: 10, justify: 'left'} \
+        } \
+    }, \
+    safetyMargin: Group{ \
+        label: StaticText { text: 'Buffer:' } \
+        input: EditText { text: '', characters: 2, justify: 'left'}, \
+    }, \
+    includeBackground: Group{ \
+        input: Checkbox { text:'Include Background Layer', value: false } \
+    }, \
+    action: Group{ \
+        cancelButton: Button { text: 'Cancel', properties:{name:'cancel'}, size: [120,24], alignment:['right', 'center'] }, \
+        okayButton: Button { text: 'Okay', properties:{name:'okay'}, size: [120,24], alignment:['right', 'center'] }, \
+    }\
+}"
+
+/* MAIN */
+
+if( app.documents.length == 0 ){
+	alert( "No document to process!" );
+} else {
+    var outputFolder = app.activeDocument.path;
+    var win = new Window(optionsDialogResource);
+    win.outputFolder.input.text = outputFolder;
+    win.suffix.atlas.input.text = atlasSuffix;
+    win.suffix.metadata.input.text = metadataSuffix;
+    win.includeBackground.input.value = renderBackgroundLayer;
+    win.safetyMargin.input.text = safetyMargin;
+
+    win.outputFolder.browseButton.onClick = function() {
+      outputFolder = Folder.selectDialog("Select a folder for the output files", outputFolder);
+      win.outputFolder.input.text = outputFolder;
+    };
+    win.action.cancelButton.onClick = function() {
+      win.close();
+    };
+    win.action.okayButton.onClick = function() {
+      // read settings
+      atlasSuffix = win.suffix.atlas.input.text;
+      metadataSuffix = win.suffix.metadata.input.text;
+      renderBackgroundLayer = win.includeBackground.input.value;
+      safetyMargin = parseInt(win.safetyMargin.input.text);
+
+      // act
+      var ret = win.close();
+      processLayers();
+      return ret;
+    };
+    win.show();
+}
 
 function process_bounds( bounds ){
 	var d = [];
@@ -88,16 +164,6 @@ function pad(i){
 		return "0" + i;
 	} else {
 		return "" + i;
-	}
-}
-
-if( app.documents.length == 0 ){
-	alert( "No document to process!" );
-} else {
-	var outputFolder = Folder.selectDialog("Select a folder for the output files");
-	if( outputFolder != null ){
-        renderBackgroundLayer = confirm('Include the Background layer?', false, 'Include Background Layer?');
-		processLayers();
 	}
 }
 
